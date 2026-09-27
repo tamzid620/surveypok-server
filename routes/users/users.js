@@ -114,6 +114,7 @@ module.exports = function usersRoutes(usersCollection) {
       if (!exists) {
         loggedUser.push({
           id: user._id,
+          name: user.fullName,
           email: user.email,
           role: user.role,
         });
@@ -124,6 +125,7 @@ module.exports = function usersRoutes(usersCollection) {
         token,
         user: {
           id: user._id,
+          name: user.fullName,
           email: user.email,
           role: user.role,
         },

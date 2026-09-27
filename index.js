@@ -51,7 +51,7 @@ const client = new MongoClient(uri, {
 
 // routes import secton ----------------
 const usersRoutes = require("./routes/users/users");
-// const appointmentsRoutes= require("./routes/appointments/appointments") ;
+const projectsRoutes= require("./routes/projects/projects") ;
 
 async function run() {
   try {
@@ -72,10 +72,10 @@ run().catch(console.dir);
 // database collection ---------------------
 const db = client.db(dbAppName);
 const usersCollection = db.collection("users");
-//  const appointmentsCollection= db.collection("appointments")
+ const projectsCollection= db.collection("projects")
 // Define Routes secton ---------------------------
 app.use("/users", usersRoutes(usersCollection));
-// app.use("/appointments", appointmentsRoutes(appointmentsCollection))
+app.use("/projects", projectsRoutes(projectsCollection))
 
 // ###########################################################
 

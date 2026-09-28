@@ -74,23 +74,34 @@ module.exports = function projectsRoutes(projectsCollection) {
   // GET ALL PROJECTS
   // =========================================================
 
-  router.get("/all-projects", async (req, res) => {
-    try {
-    
+ router.get("/all-projects", async (req, res) => {
+  try {
+    // Newest first (same order the frontend showed with localStorage)
+    const projects = await projectsCollection
+      .find({})
+      .sort({ createdAt: -1 })
+      .toArray();
 
-      res.status(200).json({
-        success: true,
-    
-      });
-    } catch (error) {
-      console.error("Error fetching all projects:", error);
+    // Frontend uses `p.id`, but MongoDB stores `_id`, so rename it to `id`
+    const data = projects.map(({ _id, ...rest }) => ({
+      id: _id.toString(),
+      ...rest,
+    }));
 
-      res.status(500).json({
-        success: false,
-        message: "Error fetching all projects",
-      });
-    }
-  });
+    res.status(200).json({
+      success: true,
+      count: data.length,
+      data,
+    });
+  } catch (error) {
+    console.error("Error fetching all projects:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Error fetching all projects",
+    });
+  }
+});
 
   // =========================================================
   // UPDATE / EDIT PROJECT

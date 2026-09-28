@@ -3,7 +3,7 @@
 const express = require("express");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const SECRET_KEY = process.env.SECRET_KEY;
+const JWT_SECRET = process.env.JWT_SECRET;
 
 module.exports = function usersRoutes(usersCollection) {
   const router = express.Router();
@@ -15,7 +15,7 @@ module.exports = function usersRoutes(usersCollection) {
     try {
       const { fullName, email, password } = req.body;
 
-      if ((!fullName,!email,!password)) {
+      if ((!fullName, !email, !password)) {
         return res.status(400).send({
           success: false,
           message: "All field are required",
@@ -46,9 +46,10 @@ module.exports = function usersRoutes(usersCollection) {
           email: newUser.email,
           role: newUser.role,
         },
-        SECRET_KEY,
-        { expiresIn: "24h" }, // token expires in 24 hour)
+        JWT_SECRET,
+        { expiresIn: "24h" },
       );
+
       res.status(201).send({
         success: true,
         message: "Registration successful",
@@ -99,14 +100,22 @@ module.exports = function usersRoutes(usersCollection) {
       }
 
       // Generate JWT token ----
+      // const token = jwt.sign(
+      //   {
+      //     id: user._id,
+      //     email: user.email,
+      //     role: user.role,
+      //   },
+      //   JWT_SECRET,
+      //   { expiresIn: "24h" },
+      // );
+       // after you've verified the email + password (bcrypt.compare)
       const token = jwt.sign(
+        { id: user._id.toString() },
+        process.env.JWT_SECRET,
         {
-          id: user._id,
-          email: user.email,
-          role: user.role,
+          expiresIn: "24h",
         },
-        SECRET_KEY,
-        { expiresIn: "24h" },
       );
 
       // ✅ Already logged check

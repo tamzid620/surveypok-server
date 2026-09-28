@@ -29,14 +29,14 @@ app.use(express.json());
 //  key from env file -----------------
 const dbUsername = process.env.DB_USERNAME;
 const dbPassword = process.env.DB_PASSWORD;
-const dbAppName = process.env.DB_APPNAME;
+const dbName = process.env.DB_NAME;
 
 // ###########################################################
 
 // MongoDB connection Function --------------------------------
 const { MongoClient, ServerApiVersion } = require("mongodb");
 // const uri = `mongodb+srv://<db_username>:<db_password>@cluster0.qtemx5j.mongodb.net/?appName=Cluster0`;
-const uri = `mongodb+srv://${dbUsername}:${dbPassword}@cluster0.qtemx5j.mongodb.net/?appName=${dbAppName}`;
+const uri = `mongodb+srv://${dbUsername}:${dbPassword}@cluster0.qtemx5j.mongodb.net/?appName=${dbName}`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
@@ -70,7 +70,7 @@ run().catch(console.dir);
 // ###########################################################
 
 // database collection ---------------------
-const db = client.db(dbAppName);
+const db = client.db(dbName);
 const usersCollection = db.collection("users");
  const projectsCollection= db.collection("projects")
 // Define Routes secton ---------------------------

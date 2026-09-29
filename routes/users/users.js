@@ -13,9 +13,9 @@ module.exports = function usersRoutes(usersCollection) {
   // ✅ Register appointments Route ==================
   router.post("/register", async (req, res) => {
     try {
-      const { fullName, email, password } = req.body;
+      const { name, email, password } = req.body;
 
-      if ((!fullName, !email, !password)) {
+      if ((!name, !email, !password)) {
         return res.status(400).send({
           success: false,
           message: "All field are required",
@@ -33,7 +33,7 @@ module.exports = function usersRoutes(usersCollection) {
       const hashedPassword = await bcrypt.hash(password, 10);
       // Insert new user --------
       const newUser = {
-        fullName,
+        name,
         email,
         password: hashedPassword,
         role: "user",
@@ -123,7 +123,7 @@ module.exports = function usersRoutes(usersCollection) {
       if (!exists) {
         loggedUser.push({
           id: user._id,
-          name: user.fullName,
+          name: user.name,
           email: user.email,
           role: user.role,
         });
@@ -134,7 +134,7 @@ module.exports = function usersRoutes(usersCollection) {
         token,
         user: {
           id: user._id,
-          name: user.fullName,
+          name: user.name,
           email: user.email,
           role: user.role,
         },

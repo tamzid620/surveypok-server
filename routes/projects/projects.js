@@ -281,44 +281,62 @@ router.get("/project/:id", async (req, res) => {
 
   // =========================================================
   // DELETE PROJECT
-  // =========================================================
+// =========================================================
+router.delete("/delete-project/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
 
-  // router.delete("/delete-project/:id", async (req, res) => {
-  //   try {
-  //     const { id } = req.params;
+    // Check authentication
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized. User not found.",
+      });
+    }
 
-  //     // Validate ObjectId
-  //     if (!ObjectId.isValid(id)) {
-  //       return res.status(400).json({
-  //         success: false,
-  //         message: "Invalid project ID",
-  //       });
-  //     }
+    // Validate project ID
+    if (!ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid project ID",
+      });
+    }
 
-  //     const result = await projectsCollection.deleteOne({
-  //       _id: new ObjectId(id),
-  //     });
+    // Validate user ID
+    if (!ObjectId.isValid(req.user.id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid user ID",
+      });
+    }
 
-  //     if (result.deletedCount === 0) {
-  //       return res.status(404).json({
-  //         success: false,
-  //         message: "Project not found",
-  //       });
-  //     }
+    // Delete only the project belonging to the logged-in user
+    const result = await projectsCollection.deleteOne({
+      _id: new ObjectId(id),
+      userId: new ObjectId(req.user.id),
+    });
 
-  //     res.status(200).json({
-  //       success: true,
-  //       message: "Project deleted successfully",
-  //     });
-  //   } catch (error) {
-  //     console.error("Error deleting project:", error);
+    // Project not found or doesn't belong to this user
+    if (result.deletedCount === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Project not found",
+      });
+    }
 
-  //     res.status(500).json({
-  //       success: false,
-  //       message: error.message,
-  //     });
-  //   }
-  // });
+    return res.status(200).json({
+      success: true,
+      message: "Project deleted successfully",
+    });
+  } catch (error) {
+    console.error("Error deleting project:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Error deleting project",
+    });
+  }
+});
 
   return router;
 };

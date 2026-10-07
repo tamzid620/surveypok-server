@@ -51,12 +51,26 @@ const client = new MongoClient(uri, {
 
 // routes import secton ----------------
 const usersRoutes = require("./routes/users/users");
-const projectsRoutes= require("./routes/projects/projects") ;
+const projectsRoutes = require("./routes/projects/projects");
+const tasksRoutes = require("./routes/tasks/tasks");
+
+// ###########################################################
+// database collection ---------------------
+const db = client.db(dbName);
+const usersCollection = db.collection("users");
+const projectsCollection = db.collection("projects");
+const tasksCollection = db.collection("tasks");
+
+// Define Routes secton ---------------------------
+app.use("/users", usersRoutes(usersCollection));
+app.use("/projects", projectsRoutes(projectsCollection, tasksCollection));
+app.use("/tasks", tasksRoutes(tasksCollection, projectsCollection));
+// ###########################################################
 
 async function run() {
   try {
     await client.connect();
-
+    await tasksCollection.createIndex({ projectId: 1, userId: 1 }); // connecting  task lookups by project
     await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!",
@@ -66,18 +80,6 @@ async function run() {
   }
 }
 run().catch(console.dir);
-
-// ###########################################################
-
-// database collection ---------------------
-const db = client.db(dbName);
-const usersCollection = db.collection("users");
- const projectsCollection= db.collection("projects")
-// Define Routes secton ---------------------------
-app.use("/users", usersRoutes(usersCollection));
-app.use("/projects", projectsRoutes(projectsCollection))
-
-// ###########################################################
 
 app.get("/", (req, res) => {
   res.send("Example running properly!");

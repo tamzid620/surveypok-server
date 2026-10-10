@@ -1,27 +1,5 @@
 // tasks.js
 
-// const express = require("express");
-// const { ObjectId } = require("mongodb");
-
-// module.exports = function tasksRoutes(tasksCollection){
-//   const router = express.Router();
-
-//   const taskFields = (body) => ({
-//     date: body.date,
-//     fromPlace: body.fromPlace,
-//     fromTime: body.fromTime,
-//     toPlace: body.toPlace,
-//     toTime: body.toTime,
-//     purpose: body.purpose,
-//     transport: body.transport,
-//     distance: Number(body.distance) || 0,
-//     taka: Number(body.taka) || 0,
-//   });
-
-
-//   return router;
-// };
-
 
 const express = require("express");
 const { ObjectId } = require("mongodb");
@@ -41,7 +19,7 @@ module.exports = function tasksRoutes(tasksCollection, projectsCollection) {
     toTime: body.toTime,
     purpose: body.purpose,
     transport: body.transport,
-    distance: Number(body.distance) || 0,
+    distance: body.transport,
     taka: Number(body.taka) || 0,
   });
 
@@ -126,11 +104,10 @@ module.exports = function tasksRoutes(tasksCollection, projectsCollection) {
       // Handy totals for the table footer
       const totals = data.reduce(
         (acc, t) => {
-          acc.distance += t.distance || 0;
           acc.taka += t.taka || 0;
           return acc;
         },
-        { distance: 0, taka: 0 },
+        {  taka: 0 },
       );
 
       res.status(200).json({
@@ -195,13 +172,12 @@ module.exports = function tasksRoutes(tasksCollection, projectsCollection) {
         "toPlace",
         "toTime",
         "purpose",
+        "distance",
         "transport",
       ];
       textFields.forEach((f) => {
         if (req.body[f] !== undefined) updateFields[f] = req.body[f];
       });
-      if (req.body.distance !== undefined)
-        updateFields.distance = Number(req.body.distance) || 0;
       if (req.body.taka !== undefined)
         updateFields.taka = Number(req.body.taka) || 0;
 

@@ -83,41 +83,95 @@ module.exports = function projectsRoutes(projectsCollection, tasksCollection) {
   });
 
   // GET ALL PROJECTS =============
-  router.get("/all-projects", async (req, res) => {
-    try {
-      // Newest first (same order the frontend showed with localStorage)
-      const projects = await projectsCollection
-        .find({ userId: new ObjectId(req.user.id) })
-        .sort({ createdAt: -1 })
-        .toArray();
+//   router.get("/all-projects", async (req, res) => {
+//     try {
+//       // Newest first (same order the frontend showed with localStorage)
+//       const projects = await projectsCollection
+//         .find({ userId: new ObjectId(req.user.id) })
+//         .sort({ createdAt: -1 })
+//         .toArray();
 
-      // Frontend uses `p.id`, but MongoDB stores `_id`, so rename it to `id`
-      const data = projects.map(({ _id, ...rest }) => ({
-        id: _id.toString(),
-        ...rest,
-      }));
-// Check authentication
-      if (!req.user || !req.user.id) {
-        return res.status(401).json({
-          success: false,
-          message: "Unauthorized. User not found.",
-        });
-      }
+//       // Frontend uses `p.id`, but MongoDB stores `_id`, so rename it to `id`
+//       const data = projects.map(({ _id, ...rest }) => ({
+//         id: _id.toString(),
+//         ...rest,
+//       }));
+// // Check authentication
+//       if (!req.user || !req.user.id) {
+//         return res.status(401).json({
+//           success: false,
+//           message: "Unauthorized. User not found.",
+//         });
+//       }
 
-      res.status(200).json({
-        success: true,
-        count: data.length,
-        data,
-      });
-    } catch (error) {
-      console.error("Error fetching all projects:", error);
+//       res.status(200).json({
+//         success: true,
+//         count: data.length,
+//         data,
+//       });
+//     } catch (error) {
+//       console.error("Error fetching all projects:", error);
 
-      res.status(500).json({
+//       res.status(500).json({
+//         success: false,
+//         message: "Error fetching all projects",
+//       });
+//     }
+//   });
+// GET ALL PROJECTS (paginated) =============
+// Usage: /projects/all-projects?page=1&limit=10
+
+router.get("/all-projects", async (req, res) => {
+  try {
+    // Check authentication first
+    if (!req.user || !req.user.id || !ObjectId.isValid(req.user.id)) {
+      return res.status(401).json({
         success: false,
-        message: "Error fetching all projects",
+        message: "Unauthorized. User not found.",
       });
     }
-  });
+
+    // Read and sanitize query params
+    const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
+    const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 10, 1), 100);
+    const skip = (page - 1) * limit;
+
+    const filter = { userId: new ObjectId(req.user.id) };
+
+    // Fetch this page + the total count in parallel
+    const [projects, total] = await Promise.all([
+      projectsCollection
+        .find(filter)
+        .sort({ createdAt: -1, _id: -1 }) // _id as tie-breaker keeps pages stable
+        .skip(skip)
+        .limit(limit)
+        .toArray(),
+      projectsCollection.countDocuments(filter),
+    ]);
+
+    const data = projects.map(({ _id, ...rest }) => ({
+      id: _id.toString(),
+      ...rest,
+    }));
+
+    res.status(200).json({
+      success: true,
+      data,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.max(1, Math.ceil(total / limit)),
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching all projects:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error fetching all projects",
+    });
+  }
+});
 
   // GET SINGLE PROJECT BY ID =============
   router.get("/project/:id", async (req, res) => {

@@ -8,12 +8,6 @@ const port = 7000;
 const dns = require("dns");
 dns.setServers(["8.8.8.8", "1.1.1.1", "0.0.0.0"]);
 
-// cors connection --------------------------------
-// const allowedOrigins = [
-//   "",
-//   "",
-// ];
-
 app.use(
   cors({
     origin: (origin, callback) => {

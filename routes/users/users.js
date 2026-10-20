@@ -1,13 +1,4 @@
 // # users.js ->
-//
-// ✅ NEW: POST /forgot-password, GET + POST /reset-password/:token
-// ✅ FIXED: register field check (`!name, !email, !password` only checked password)
-// ✅ FIXED: register response now includes `name` (login already did)
-// ✅ FIXED: email / password must be strings (blocks NoSQL-injection objects like { "$ne": null })
-//
-// Needs:  npm i nodemailer
-// .env :  JWT_SECRET, FRONTEND_URL, SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, MAIL_FROM
-
 const express = require("express");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
@@ -94,7 +85,6 @@ module.exports = function usersRoutes(usersCollection) {
     try {
       const { name, email, password } = req.body;
 
-      // ✅ FIXED: was `(!name, !email, !password)` (comma operator → only checked password)
       if (!isText(name) || !isText(email) || !isText(password)) {
         return res.status(400).send({
           success: false,
@@ -221,12 +211,6 @@ module.exports = function usersRoutes(usersCollection) {
 
   // =========================================================
   // ✅ FORGOT PASSWORD — step 1: request the reset email
-  // POST /forgot-password   body: { email }
-  //
-  // Always answers with the SAME message whether or not the email exists,
-  // so nobody can use this route to find out who has an account.
-  // Only a SHA-256 hash of the token is stored; the raw token only ever
-  // exists in the emailed link.
   // =========================================================
   router.post("/forgot-password", async (req, res) => {
     const genericResponse = {
@@ -294,8 +278,6 @@ module.exports = function usersRoutes(usersCollection) {
 
   // =========================================================
   // ✅ FORGOT PASSWORD — step 2a: is this link still valid?
-  // GET /reset-password/:token
-  // (lets the reset page show "link expired" before the user types anything)
   // =========================================================
   async function findUserByResetToken(token) {
     if (typeof token !== "string" || !/^[a-f0-9]{64}$/i.test(token)) return null;
@@ -322,8 +304,6 @@ module.exports = function usersRoutes(usersCollection) {
 
   // =========================================================
   // ✅ FORGOT PASSWORD — step 2b: set the new password
-  // POST /reset-password/:token   body: { password }
-  // The token is single-use: it is deleted as soon as the password changes.
   // =========================================================
   router.post("/reset-password/:token", async (req, res) => {
     try {

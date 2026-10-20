@@ -2,14 +2,12 @@
 
 const express = require("express");
 const { ObjectId } = require("mongodb");
-// const auth = require("../../auth/auth");
 const middleware = require("../../middleware/middleware");
 
 module.exports = function projectsRoutes(projectsCollection, tasksCollection) {
   const router = express.Router();
 
-  // router.use(auth); // every route below now requires a logged-in user
-  router.use(middleware); // every route below now requires a logged-in user
+  router.use(middleware);
 
   // CREATE PROJECT =============
   router.post("/create-project", async (req, res) => {
@@ -118,13 +116,70 @@ module.exports = function projectsRoutes(projectsCollection, tasksCollection) {
 //       });
 //     }
 //   });
+
 // GET ALL PROJECTS (paginated) =============
 // Usage: /projects/all-projects?page=1&limit=10
+
+// router.get("/all-projects", async (req, res) => {
+//   try {
+//     // Check authentication first
+//     if (!req.user || !req.user.id || !ObjectId.isValid(req.user.id)) {
+//       return res.status(401).json({
+//         success: false,
+//         message: "Unauthorized. User not found.",
+//       });
+//     }
+
+//     // Read and sanitize query params
+//     const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
+//     const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 10, 1), 100);
+//     const skip = (page - 1) * limit;
+
+//     const filter = { userId: new ObjectId(req.user.id) };
+
+//     // Fetch this page + the total count in parallel
+//     const [projects, total] = await Promise.all([
+//       projectsCollection
+//         .find(filter)
+//         .sort({ createdAt: -1, _id: -1 }) // _id as tie-breaker keeps pages stable
+//         .skip(skip)
+//         .limit(limit)
+//         .toArray(),
+//       projectsCollection.countDocuments(filter),
+//     ]);
+
+//     const data = projects.map(({ _id, ...rest }) => ({
+//       id: _id.toString(),
+//       ...rest,
+//     }));
+
+//     res.status(200).json({
+//       success: true,
+//       data,
+//       pagination: {
+//         page,
+//         limit,
+//         total,
+//         totalPages: Math.max(1, Math.ceil(total / limit)),
+//       },
+//     });
+//   } catch (error) {
+//     console.error("Error fetching all projects:", error);
+//     res.status(500).json({
+//       success: false,
+//       message: "Error fetching all projects",
+//     });
+//   }
+// });
 
 router.get("/all-projects", async (req, res) => {
   try {
     // Check authentication first
-    if (!req.user || !req.user.id || !ObjectId.isValid(req.user.id)) {
+    if (
+      !req.user ||
+      !req.user.id ||
+      !ObjectId.isValid(req.user.id)
+    ) {
       return res.status(401).json({
         success: false,
         message: "Unauthorized. User not found.",
@@ -132,31 +187,68 @@ router.get("/all-projects", async (req, res) => {
     }
 
     // Read and sanitize query params
-    const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
-    const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 10, 1), 100);
+    const page = Math.max(
+      parseInt(req.query.page, 10) || 1,
+      1
+    );
+
+    const limit = Math.min(
+      Math.max(parseInt(req.query.limit, 10) || 10, 1),
+      100
+    );
+
     const skip = (page - 1) * limit;
 
-    const filter = { userId: new ObjectId(req.user.id) };
+    const filter = {
+      userId: new ObjectId(req.user.id),
+    };
 
-    // Fetch this page + the total count in parallel
-    const [projects, total] = await Promise.all([
+    // Fetch paginated projects, count, and total income
+    const [projects, total, incomeResult] = await Promise.all([
       projectsCollection
         .find(filter)
-        .sort({ createdAt: -1, _id: -1 }) // _id as tie-breaker keeps pages stable
+        .sort({ createdAt: -1, _id: -1 })
         .skip(skip)
         .limit(limit)
         .toArray(),
+
       projectsCollection.countDocuments(filter),
+
+      projectsCollection
+        .aggregate([
+          { $match: filter },
+          {
+            $group: {
+              _id: null,
+              totalIncome: {
+                $sum: {
+                  $convert: {
+                    input: "$totalAmount",
+                    to: "double",
+                    onError: 0,
+                    onNull: 0,
+                  },
+                },
+              },
+            },
+          },
+        ])
+        .toArray(),
     ]);
 
+    // Convert MongoDB _id to frontend-friendly id
     const data = projects.map(({ _id, ...rest }) => ({
       id: _id.toString(),
       ...rest,
     }));
 
-    res.status(200).json({
+    // Calculate total income across ALL projects
+    const totalIncome = incomeResult[0]?.totalIncome ?? 0;
+
+    return res.status(200).json({
       success: true,
       data,
+      totalIncome,
       pagination: {
         page,
         limit,
@@ -166,12 +258,14 @@ router.get("/all-projects", async (req, res) => {
     });
   } catch (error) {
     console.error("Error fetching all projects:", error);
-    res.status(500).json({
+
+    return res.status(500).json({
       success: false,
       message: "Error fetching all projects",
     });
   }
 });
+
 
   // GET SINGLE PROJECT BY ID =============
   router.get("/project/:id", async (req, res) => {

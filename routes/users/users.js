@@ -255,7 +255,7 @@ module.exports = function usersRoutes(usersCollection) {
         },
       );
 
-      const frontendUrl = (process.env.FRONTEND_URL || "http://localhost:3000").replace(/\/+$/, "");
+      const frontendUrl = (process.env.FRONTEND_URL).replace(/\/+$/, "");
       const link = `${frontendUrl}/reset-password/${rawToken}`;
 
       try {

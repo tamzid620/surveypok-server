@@ -2,13 +2,13 @@
   "name": "survey-pok-server",
   "version": "1.0.0",
   "description": "",
-  "homepage": "https://github.com/tamzid620/survery-pok-server#readme",
+  "homepage": "https://github.com/tamzid620/surveypok-server#readme",
   "bugs": {
-    "url": "https://github.com/tamzid620/survery-pok-server/issues"
+    "url": "https://github.com/tamzid620/surveypok-server/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/tamzid620/survery-pok-server.git"
+    "url": "git+https://github.com/tamzid620/surveypok-server.git"
   },
   "license": "ISC",
   "author": "Tamzid Ull Monir",

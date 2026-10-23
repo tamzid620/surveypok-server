@@ -32,7 +32,6 @@ const { MongoClient, ServerApiVersion } = require("mongodb");
 // const uri = `mongodb+srv://<db_username>:<db_password>@cluster0.qtemx5j.mongodb.net/?appName=Cluster0`;
 const uri = `mongodb+srv://${dbUsername}:${dbPassword}@cluster0.qtemx5j.mongodb.net/?appName=${dbName}`;
 
-// Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
   serverApi: {
     version: ServerApiVersion.v1,
@@ -48,7 +47,6 @@ const usersRoutes = require("./routes/users/users");
 const projectsRoutes = require("./routes/projects/projects");
 const tasksRoutes = require("./routes/tasks/tasks");
 
-// ###########################################################
 // database collection ---------------------
 const db = client.db(dbName);
 const usersCollection = db.collection("users");
